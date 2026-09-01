@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f5f7f8" />
+    <meta name="theme-color" content="#f7f8fa" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Tasks" />
@@ -16,18 +16,32 @@
   <body>
     <main class="app-shell">
       <header class="masthead">
-        <div>
+        <div class="brand-copy">
           <p class="eyebrow">HAI work</p>
           <h1>Task Dashboard</h1>
+          <p class="masthead-subtitle">Projects, task stages, pay, and alerts in one place.</p>
         </div>
-        <button class="icon-button" id="refresh-button" type="button" title="Refresh status" aria-label="Refresh status">↻</button>
+        <div class="masthead-actions">
+          <div class="monitor-card" aria-live="polite">
+            <span class="monitor-dot" id="monitor-dot" aria-hidden="true"></span>
+            <div>
+              <strong id="monitor-title">Checking cloud monitor</strong>
+              <span id="checked-at">Not checked yet</span>
+              <span id="next-check">Next check in 1:00</span>
+            </div>
+          </div>
+          <button class="refresh-button" id="refresh-button" type="button" title="Check HAI now">
+            <span class="refresh-icon" aria-hidden="true">&#8635;</span>
+            <span>Refresh</span>
+          </button>
+        </div>
       </header>
 
       <section class="pairing-view" id="pairing-view" hidden>
         <div class="pairing-copy">
           <p class="eyebrow">Private setup</p>
           <h2>Connect this device</h2>
-          <p>Enter the pairing code shown in Task Dashboard on your Mac.</p>
+          <p>Enter your private dashboard pairing code. You only need to do this once on each device.</p>
         </div>
         <form id="pairing-form" class="pairing-form">
           <label for="pairing-code">Pairing code</label>
@@ -44,61 +58,145 @@
           <span class="alert-mark" aria-hidden="true">!</span>
           <div>
             <strong>HAI login expired</strong>
-            <p>Open Task Dashboard on your Mac and sign in again. Cloud checks will resume automatically.</p>
+            <p>Open the Mac setup once and sign in again. Cloud checks will resume automatically afterward.</p>
           </div>
         </section>
 
-        <section class="monitor-band" aria-live="polite">
-          <div class="monitor-copy">
-            <span class="monitor-dot" id="monitor-dot" aria-hidden="true"></span>
+        <nav class="workspace-nav" aria-label="Dashboard sections">
+          <div class="project-tabs" id="project-tabs" role="tablist"></div>
+          <a class="faq-jump" href="#faq-heading">FAQ</a>
+        </nav>
+
+        <section class="availability-watch" aria-live="polite">
+          <div class="availability-heading">
+            <span class="availability-signal" aria-hidden="true"></span>
             <div>
-              <strong id="monitor-title">Checking cloud monitor</strong>
-              <p id="monitor-detail">Getting the latest status.</p>
+              <h2 id="availability-title">Watching available tasks</h2>
+              <p id="availability-summary">Checking your project queues every minute.</p>
             </div>
           </div>
-          <span class="checked-at" id="checked-at"></span>
+          <div class="availability-projects" id="availability-projects"></div>
+          <span class="availability-note" id="availability-note">0 available</span>
         </section>
 
         <section class="notification-panel">
-          <div>
-            <p class="eyebrow">Phone alerts</p>
-            <h2 id="notification-title">Turn on notifications</h2>
-            <p id="notification-detail">Get an alert when a task appears or your HAI login expires.</p>
+          <div class="notification-copy">
+            <span class="info-mark" aria-hidden="true">i</span>
+            <div>
+              <p class="eyebrow">Phone alerts</p>
+              <h2 id="notification-title">Turn on notifications</h2>
+              <p id="notification-detail">Get an alert when a task appears or your HAI login expires.</p>
+            </div>
           </div>
           <button class="primary" id="notification-button" type="button">Enable alerts</button>
         </section>
 
-        <section class="summary-grid" aria-label="Dashboard summary">
-          <article class="summary-item attention">
-            <span>Needs attention</span>
-            <strong id="attention-total">0</strong>
+        <section class="history-alert" id="history-alert" role="alert" hidden>
+          <span class="alert-mark" aria-hidden="true">!</span>
+          <div>
+            <strong id="history-alert-title">Saved task difference found</strong>
+            <p id="history-alert-summary"></p>
+          </div>
+        </section>
+
+        <div id="overview-content" class="overview-content">
+          <header class="section-heading overview-heading">
+            <div>
+              <p class="eyebrow">Across all projects</p>
+              <h2>Your work at a glance</h2>
+              <p>Handle fixes first, then check what is in review and what has reached payout stages.</p>
+            </div>
+          </header>
+
+          <section class="summary-grid" id="summary-grid" aria-label="Work summary"></section>
+
+          <article class="panel attention-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">First priority</p>
+                <h2>Needs your attention</h2>
+              </div>
+              <span class="count-badge" id="attention-count">0</span>
+            </div>
+            <ul class="task-list attention-list" id="attention-list"></ul>
           </article>
-          <article class="summary-item review">
-            <span>In review</span>
-            <strong id="review-total">0</strong>
-          </article>
-          <article class="summary-item paid">
-            <span>Paid out est.</span>
-            <strong id="paid-total">$0</strong>
-          </article>
-          <article class="summary-item missing">
-            <span>Missing tasks</span>
-            <strong id="missing-total">0</strong>
+
+          <div class="overview-columns">
+            <article class="panel overview-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Projects</p>
+                  <h2>Your projects</h2>
+                </div>
+              </div>
+              <div class="project-overview-list" id="project-overview-list"></div>
+            </article>
+
+            <article class="panel overview-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Latest status</p>
+                  <h2>Recently updated</h2>
+                </div>
+              </div>
+              <ul class="task-list recent-list" id="recent-list"></ul>
+            </article>
+          </div>
+        </div>
+
+        <section id="project-content" class="project-content" hidden>
+          <header class="project-view-heading">
+            <div>
+              <p class="eyebrow">Project detail</p>
+              <h2 id="project-view-title">Project tasks</h2>
+              <p id="project-view-description">Current tasks and saved task history for this project.</p>
+            </div>
+            <a class="open-project-link" id="project-handshake-link" href="https://ai.joinhandshake.com/fellow/projects" target="_blank" rel="noreferrer">Open in Handshake <span aria-hidden="true">&#8599;</span></a>
+          </header>
+          <section class="summary-grid project-summary-grid" id="project-summary-grid" aria-label="Project summary"></section>
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">All tracked work</p>
+                <h2 id="project-task-heading">Tasks</h2>
+              </div>
+              <span class="count-badge" id="project-task-count">0</span>
+            </div>
+            <ul class="task-list project-task-list" id="project-task-list"></ul>
           </article>
         </section>
 
-        <section class="projects-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Available tasks</p>
-              <h2>Project queues</h2>
-            </div>
-            <span class="queue-total" id="queue-total">0 available</span>
+        <section class="faq-section" aria-labelledby="faq-heading">
+          <h2 id="faq-heading">FAQ</h2>
+          <p class="faq-intro">Answers to the questions that come up most often.</p>
+          <div class="faq-list">
+            <details>
+              <summary>My pay looks wrong</summary>
+              <p>Start with Handshake's guide to how AI payments are processed:</p>
+              <p><a href="https://support.joinhandshake.com/hc/en-us/articles/32263614087575-Handshake-AI-payments-processing" target="_blank" rel="noreferrer">Handshake AI payments processing</a></p>
+              <p>For Ivy and Roadhouse, a task counts once it reaches Ready to Deliver or Delivered. Review stages, Awaiting Review, Needs Fixing, and staging are still in the review loop.</p>
+              <p>For Jet, this dashboard adds $10 per hour from Handshake's tracked task time. It adds another $220 when a task reaches Ready to Deliver or Delivered.</p>
+              <p>The dashboard is an estimate. The Handshake Payments page is the final source of truth.</p>
+            </details>
+            <details>
+              <summary>How do I know if a task is RTD or Delivered?</summary>
+              <p>This dashboard pulls the exact stage from your Handshake task list and shows it beside each task.</p>
+              <p>On the HAI task page, you can also hover over the task ID in the top-left. Unknown can still mean RTD or Delivered after you hover, so check the hover text before assuming it is stuck.</p>
+            </details>
+            <details>
+              <summary>When are new tasks coming?</summary>
+              <p>Tasks come in batches, and there is not a fixed daily schedule. This dashboard checks each queue every minute and can notify you when a batch appears.</p>
+            </details>
+            <details>
+              <summary>My task says Needs Fixing but I don't see feedback</summary>
+              <p>Check your task tab first. Select the task, click View, and look for feedback on the right side. If nothing shows there, check the most recent sheet that was sent by the team.</p>
+              <p>If the task still has no feedback, the feedback looks stale, or the task ID is missing from the sheet, ask in ivy-online-ranking-tasking with the task ID and what you checked.</p>
+            </details>
           </div>
-          <div class="project-list" id="project-list"></div>
         </section>
 
         <footer class="footer-actions">
+          <span>Private dashboard</span>
           <button class="text-button" id="disconnect-button" type="button">Disconnect this device</button>
         </footer>
       </div>
