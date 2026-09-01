@@ -489,7 +489,7 @@ function isStandalone() {
 async function renderNotifications(data) {
   if (PREVIEW_MODE) {
     elements.notificationTitle.textContent = "Phone alerts are on";
-    elements.notificationDetail.textContent = "New task and expired-login alerts will appear on this device.";
+    elements.notificationDetail.textContent = "New tasks, stage changes, payout stages, and expired-login alerts will appear on this device.";
     elements.notificationButton.textContent = "Alerts enabled";
     elements.notificationButton.disabled = true;
     return;
@@ -497,7 +497,7 @@ async function renderNotifications(data) {
   const subscription = await currentSubscription().catch(() => null);
   if (subscription && Notification.permission === "granted") {
     elements.notificationTitle.textContent = "Phone alerts are on";
-    elements.notificationDetail.textContent = "You will be notified about new tasks and an expired HAI login.";
+    elements.notificationDetail.textContent = "You will be notified about new tasks, stage changes, payout stages, and an expired HAI login.";
     elements.notificationButton.textContent = "Alerts enabled";
     elements.notificationButton.disabled = true;
     return;
@@ -649,7 +649,7 @@ elements.disconnectButton.addEventListener("click", async () => {
 elements.refreshButton.addEventListener("click", checkNow);
 
 if ("serviceWorker" in navigator && !PREVIEW_MODE) {
-  navigator.serviceWorker.register("./service-worker.js", { scope: "./" });
+  navigator.serviceWorker.register("./service-worker.js?v=20260901-3", { scope: "./" });
 }
 
 loadStatus();

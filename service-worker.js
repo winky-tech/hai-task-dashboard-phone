@@ -1,3 +1,9 @@
+self.addEventListener("install", () => self.skipWaiting());
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener("push", (event) => {
   let payload = {};
   try {
@@ -13,6 +19,8 @@ self.addEventListener("push", (event) => {
       badge: "./icon-192.png",
       tag: payload.tag || "hai-dashboard",
       renotify: true,
+      silent: payload.silent === true,
+      ...(payload.payoutStage ? { vibrate: [80, 60, 80, 60, 180] } : {}),
       data: { url: payload.url || "./" },
     })
   );
