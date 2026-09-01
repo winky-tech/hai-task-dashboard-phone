@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f7f8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Tasks" />
+    <title>Task Dashboard</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-180.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">HAI work</p>
+          <h1>Task Dashboard</h1>
+        </div>
+        <button class="icon-button" id="refresh-button" type="button" title="Refresh status" aria-label="Refresh status">↻</button>
+      </header>
+
+      <section class="pairing-view" id="pairing-view" hidden>
+        <div class="pairing-copy">
+          <p class="eyebrow">Private setup</p>
+          <h2>Connect this device</h2>
+          <p>Enter the pairing code shown in Task Dashboard on your Mac.</p>
+        </div>
+        <form id="pairing-form" class="pairing-form">
+          <label for="pairing-code">Pairing code</label>
+          <div class="pairing-row">
+            <input id="pairing-code" name="pairing-code" type="password" autocomplete="one-time-code" required />
+            <button class="primary" type="submit">Connect</button>
+          </div>
+          <p class="form-error" id="pairing-error" role="alert" hidden></p>
+        </form>
+      </section>
+
+      <div id="dashboard" hidden>
+        <section class="session-alert" id="session-alert" role="alert" hidden>
+          <span class="alert-mark" aria-hidden="true">!</span>
+          <div>
+            <strong>HAI login expired</strong>
+            <p>Open Task Dashboard on your Mac and sign in again. Cloud checks will resume automatically.</p>
+          </div>
+        </section>
+
+        <section class="monitor-band" aria-live="polite">
+          <div class="monitor-copy">
+            <span class="monitor-dot" id="monitor-dot" aria-hidden="true"></span>
+            <div>
+              <strong id="monitor-title">Checking cloud monitor</strong>
+              <p id="monitor-detail">Getting the latest status.</p>
+            </div>
+          </div>
+          <span class="checked-at" id="checked-at"></span>
+        </section>
+
+        <section class="notification-panel">
+          <div>
+            <p class="eyebrow">Phone alerts</p>
+            <h2 id="notification-title">Turn on notifications</h2>
+            <p id="notification-detail">Get an alert when a task appears or your HAI login expires.</p>
+          </div>
+          <button class="primary" id="notification-button" type="button">Enable alerts</button>
+        </section>
+
+        <section class="summary-grid" aria-label="Dashboard summary">
+          <article class="summary-item attention">
+            <span>Needs attention</span>
+            <strong id="attention-total">0</strong>
+          </article>
+          <article class="summary-item review">
+            <span>In review</span>
+            <strong id="review-total">0</strong>
+          </article>
+          <article class="summary-item paid">
+            <span>Paid out est.</span>
+            <strong id="paid-total">$0</strong>
+          </article>
+          <article class="summary-item missing">
+            <span>Missing tasks</span>
+            <strong id="missing-total">0</strong>
+          </article>
+        </section>
+
+        <section class="projects-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Available tasks</p>
+              <h2>Project queues</h2>
+            </div>
+            <span class="queue-total" id="queue-total">0 available</span>
+          </div>
+          <div class="project-list" id="project-list"></div>
+        </section>
+
+        <footer class="footer-actions">
+          <button class="text-button" id="disconnect-button" type="button">Disconnect this device</button>
+        </footer>
+      </div>
+    </main>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
