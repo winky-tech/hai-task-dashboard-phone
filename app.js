@@ -347,15 +347,15 @@ function renderAvailability(projects = [], pollIntervalMs = DEFAULT_CHECK_INTERV
     0
   );
   const failures = visible.filter((project) => project.check_status === "error").length;
+  const intervalMinutes = Math.max(1, Math.round(pollIntervalMs / 60_000));
+  const intervalLabel =
+    intervalMinutes === 1 ? "every minute" : `every ${intervalMinutes} minutes`;
   elements.availabilityTitle.textContent =
     total > 0 ? `${total} task${total === 1 ? " is" : "s are"} available` : "Watching available tasks";
   elements.availabilitySummary.textContent =
     failures > 0
       ? `${failures} project check${failures === 1 ? "" : "s"} will retry automatically.`
-      : `Ivy, Roadhouse, and your active projects are checked every ${Math.max(
-          1,
-          Math.round(pollIntervalMs / 60_000)
-        )} minutes.`;
+      : `Ivy, Roadhouse, and your active projects are checked ${intervalLabel}.`;
   elements.availabilityNote.textContent = `${total} available`;
   elements.availabilityProjects.innerHTML = visible
     .map((project) => {
