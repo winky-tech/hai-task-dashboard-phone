@@ -1,7 +1,7 @@
 const FUNCTION_URL =
   "https://aeqfirqtgfbngvihpccv.supabase.co/functions/v1/available-task-monitor";
 const TOKEN_KEY = "hai-dashboard-pairing-code";
-const CHECK_INTERVAL_MS = 60_000;
+const DEFAULT_CHECK_INTERVAL_MS = 5 * 60_000;
 const PREVIEW_MODE =
   ["localhost", "127.0.0.1"].includes(location.hostname) &&
   new URLSearchParams(location.search).get("preview") === "1";
@@ -151,6 +151,7 @@ const previewTasks = [
 
 const previewStatus = {
   status: "ok",
+  pollIntervalMs: DEFAULT_CHECK_INTERVAL_MS,
   sessionStatus: "valid",
   lastPollAt: new Date(Date.now() - 18_000).toISOString(),
   lastPollStatus: "ok",
@@ -292,7 +293,8 @@ function updateCountdown() {
     elements.nextCheck.textContent = "First check is starting";
     return;
   }
-  const remaining = Math.max(0, lastPoll + CHECK_INTERVAL_MS - Date.now());
+  const intervalMs = Number(dashboardStatus.pollIntervalMs) || DEFAULT_CHECK_INTERVAL_MS;
+  const remaining = Math.max(0, lastPoll + intervalMs - Date.now());
   const seconds = Math.ceil(remaining / 1000);
   const minutesPart = Math.floor(seconds / 60);
   const secondsPart = String(seconds % 60).padStart(2, "0");
@@ -338,7 +340,7 @@ function renderTabs(projects = []) {
     .join("");
 }
 
-function renderAvailability(projects = []) {
+function renderAvailability(projects = [], pollIntervalMs = DEFAULT_CHECK_INTERVAL_MS) {
   const visible = projects.filter((project) => project.check_status !== "hidden");
   const total = visible.reduce(
     (sum, project) => sum + (Number(project.available_count) || 0),
@@ -350,7 +352,10 @@ function renderAvailability(projects = []) {
   elements.availabilitySummary.textContent =
     failures > 0
       ? `${failures} project check${failures === 1 ? "" : "s"} will retry automatically.`
-      : "Ivy, Roadhouse, and your active projects are checked every minute.";
+      : `Ivy, Roadhouse, and your active projects are checked every ${Math.max(
+          1,
+          Math.round(pollIntervalMs / 60_000)
+        )} minutes.`;
   elements.availabilityNote.textContent = `${total} available`;
   elements.availabilityProjects.innerHTML = visible
     .map((project) => {
@@ -556,7 +561,7 @@ async function renderDashboard(data) {
   elements.pairingView.hidden = true;
   elements.dashboard.hidden = false;
   renderMonitor(data);
-  renderAvailability(data.projects || []);
+  renderAvailability(data.projects || [], data.pollIntervalMs);
   renderOverviewSummary(data.summary || {});
   renderAttention(data.tasks || []);
   renderProjectOverview(data.projectSummaries || []);
