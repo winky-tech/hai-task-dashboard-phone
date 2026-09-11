@@ -1,7 +1,7 @@
 const FUNCTION_URL =
   "https://aeqfirqtgfbngvihpccv.supabase.co/functions/v1/available-task-monitor";
 const TOKEN_KEY = "hai-dashboard-pairing-code";
-const DEFAULT_CHECK_INTERVAL_MS = 5 * 60_000;
+const DEFAULT_CHECK_INTERVAL_MS = 30_000;
 const PREVIEW_MODE =
   ["localhost", "127.0.0.1"].includes(location.hostname) &&
   new URLSearchParams(location.search).get("preview") === "1";
@@ -284,7 +284,7 @@ function updateCountdown() {
     elements.nextCheck.textContent = "Checking HAI now";
     return;
   }
-  if (dashboardStatus.sessionStatus !== "valid") {
+  if (["missing", "expired", "checking"].includes(dashboardStatus.sessionStatus)) {
     elements.nextCheck.textContent = "Automatic checks paused";
     return;
   }
@@ -294,12 +294,16 @@ function updateCountdown() {
     return;
   }
   const intervalMs = Number(dashboardStatus.pollIntervalMs) || DEFAULT_CHECK_INTERVAL_MS;
-  const remaining = Math.max(0, lastPoll + intervalMs - Date.now());
+  const retryAt = new Date(dashboardStatus.rateLimitRetryAt || "").getTime();
+  const scheduledAt = new Date(dashboardStatus.nextPollAt || "").getTime();
+  const nextAt = Number.isFinite(retryAt) && retryAt > Date.now()
+    ? retryAt : Number.isFinite(scheduledAt) ? scheduledAt : lastPoll + intervalMs;
+  const remaining = Math.max(0, nextAt - Date.now());
   const seconds = Math.ceil(remaining / 1000);
   const minutesPart = Math.floor(seconds / 60);
   const secondsPart = String(seconds % 60).padStart(2, "0");
   elements.nextCheck.textContent =
-    seconds === 0 ? "Next automatic check is due" : `Next check in ${minutesPart}:${secondsPart}`;
+    seconds === 0 ? "Waiting for the next check" : `${retryAt > Date.now() ? "Rate limit: retry in" : "Next check in"} ${minutesPart}:${secondsPart}`;
   elements.checkedAt.textContent = relativeTime(dashboardStatus.lastPollAt);
 }
 
@@ -311,6 +315,9 @@ function renderMonitor(data) {
   if (checkInProgress) {
     elements.monitorDot.classList.add("checking");
     elements.monitorTitle.textContent = "Checking HAI now";
+  } else if (session === "valid" && Date.now() - new Date(data.lastPollAt || 0).getTime() > 3 * (data.pollIntervalMs || DEFAULT_CHECK_INTERVAL_MS)) {
+    elements.monitorDot.classList.add("error");
+    elements.monitorTitle.textContent = "Cloud checks are delayed";
   } else if (session === "valid" && data.lastPollStatus === "ok") {
     elements.monitorDot.classList.add("ok");
     elements.monitorTitle.textContent = "Cloud monitor is running";
@@ -349,7 +356,8 @@ function renderAvailability(projects = [], pollIntervalMs = DEFAULT_CHECK_INTERV
   const failures = visible.filter((project) => project.check_status === "error").length;
   const intervalMinutes = Math.max(1, Math.round(pollIntervalMs / 60_000));
   const intervalLabel =
-    intervalMinutes === 1 ? "every minute" : `every ${intervalMinutes} minutes`;
+    pollIntervalMs < 60_000 ? `every ${Math.round(pollIntervalMs / 1000)} seconds`
+      : intervalMinutes === 1 ? "every minute" : `every ${intervalMinutes} minutes`;
   elements.availabilityTitle.textContent =
     total > 0 ? `${total} task${total === 1 ? " is" : "s are"} available` : "Watching available tasks";
   elements.availabilitySummary.textContent =
@@ -361,7 +369,8 @@ function renderAvailability(projects = [], pollIntervalMs = DEFAULT_CHECK_INTERV
     .map((project) => {
       const count = Number(project.available_count) || 0;
       const tone = project.check_status === "error" ? "error" : count > 0 ? "available" : "";
-      return `<a class="availability-chip ${tone}" href="${safeUrl(project.project_url)}" target="_blank" rel="noreferrer"><span>${escapeHtml(project.project_name)}</span><strong>${count}</strong></a>`;
+      const label = project.check_status === "error" ? "Check failed" : count;
+      return `<a class="availability-chip ${tone}" href="${safeUrl(project.project_url)}" target="_blank" rel="noreferrer"><span>${escapeHtml(project.project_name)}</span><strong>${escapeHtml(label)}</strong></a>`;
     })
     .join("");
 }
