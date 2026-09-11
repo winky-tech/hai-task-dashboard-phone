@@ -1,7 +1,7 @@
 const FUNCTION_URL =
   "https://aeqfirqtgfbngvihpccv.supabase.co/functions/v1/available-task-monitor";
 const TOKEN_KEY = "hai-dashboard-pairing-code";
-const DEFAULT_CHECK_INTERVAL_MS = 30_000;
+const DEFAULT_CHECK_INTERVAL_MS = 60_000;
 const PREVIEW_MODE =
   ["localhost", "127.0.0.1"].includes(location.hostname) &&
   new URLSearchParams(location.search).get("preview") === "1";
