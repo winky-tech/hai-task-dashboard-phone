@@ -251,6 +251,7 @@ function relativeTime(value, prefix = "Checked") {
 }
 
 function taskNeedsAttention(task = {}) {
+  if (task.needsFixing === true) return true;
   const stage = String(task.stage || "").toLowerCase();
   const build = String(task.buildStatus || "").toLowerCase();
   return (
@@ -394,7 +395,7 @@ function taskRow(task, options = {}) {
   const project = options.showProject ? `${task.projectName || "Project"} · ` : "";
   const missing = task.isMissing ? " · Missing from current HAI list" : "";
   const amount = Number(task.paymentAmount) > 0 ? money(task.paymentAmount) : "";
-  const tag = task.isMissing ? "Saved" : task.stage || "Unknown";
+  const tag = task.isMissing ? "Saved" : task.fixStatusLabel || task.stage || "Unknown";
   return `<li class="task-row ${task.isMissing ? "missing" : ""}">
     <a href="${safeUrl(task.taskUrl)}" target="_blank" rel="noreferrer">
       <span class="task-main"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(project + taskId + missing)}</small></span>
