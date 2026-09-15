@@ -17,6 +17,8 @@ const elements = {
   notificationButton: document.querySelector("#notification-button"),
   notificationTitle: document.querySelector("#notification-title"),
   notificationDetail: document.querySelector("#notification-detail"),
+  projectAlertSettings: document.querySelector("#project-alert-settings"),
+  alertSettingsError: document.querySelector("#alert-settings-error"),
   sessionAlert: document.querySelector("#session-alert"),
   monitorDot: document.querySelector("#monitor-dot"),
   monitorTitle: document.querySelector("#monitor-title"),
@@ -45,6 +47,9 @@ const elements = {
 };
 
 let dashboardStatus = null;
+let deviceAlertSettings = null;
+let notificationSettingsBusy = false;
+let notificationRenderId = 0;
 let activeView = "overview";
 let checkInProgress = false;
 
@@ -501,25 +506,57 @@ function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
 }
 
+function renderRegisteredNotifications(data) {
+  const enabled = deviceAlertSettings.alertsEnabled;
+  elements.notificationTitle.textContent = enabled ? "Phone alerts are on" : "Phone alerts are off";
+  elements.notificationDetail.textContent = enabled
+    ? "New tasks, task updates, and login alerts."
+    : "Task tracking is still running.";
+  elements.notificationButton.textContent = enabled ? "Disable alerts" : "Enable alerts";
+  elements.notificationButton.disabled = notificationSettingsBusy || PREVIEW_MODE;
+  const projects = (data.projects || []).filter((project) =>
+    project.check_status !== "hidden" && ["ivy", "roadhouse", "jet"].includes(project.project_key));
+  const muted = new Set(deviceAlertSettings.mutedProjectKeys);
+  elements.projectAlertSettings.hidden = projects.length === 0;
+  elements.projectAlertSettings.innerHTML = projects.map((project) =>
+    `<label class="project-alert-option"><span>${escapeHtml(project.project_name)}</span><input type="checkbox" role="switch" data-project-alert="${escapeHtml(project.project_key)}" aria-label="${escapeHtml(project.project_name)} alerts" ${muted.has(project.project_key) ? "" : "checked"} ${!enabled || notificationSettingsBusy || PREVIEW_MODE ? "disabled" : ""}></label>`
+  ).join("");
+}
+
 async function renderNotifications(data) {
+  if (notificationSettingsBusy) return;
+  const renderId = ++notificationRenderId;
   if (PREVIEW_MODE) {
-    elements.notificationTitle.textContent = "Phone alerts are on";
-    elements.notificationDetail.textContent = "New tasks, stage changes, payout stages, and expired-login alerts will appear on this device.";
-    elements.notificationButton.textContent = "Alerts enabled";
-    elements.notificationButton.disabled = true;
+    deviceAlertSettings = { alertsEnabled: true, mutedProjectKeys: [] };
+    renderRegisteredNotifications(data);
     return;
   }
   const subscription = await currentSubscription().catch(() => null);
-  if (subscription && Notification.permission === "granted") {
-    elements.notificationTitle.textContent = "Phone alerts are on";
-    elements.notificationDetail.textContent = "You will be notified about new tasks, stage changes, payout stages, and an expired HAI login.";
-    elements.notificationButton.textContent = "Alerts enabled";
-    elements.notificationButton.disabled = true;
+  if (renderId !== notificationRenderId || notificationSettingsBusy) return;
+  if (subscription && "Notification" in window && Notification.permission === "granted") {
+    try {
+      const settings = await api("notification_preferences", { endpoint: subscription.endpoint });
+      if (renderId !== notificationRenderId || notificationSettingsBusy) return;
+      deviceAlertSettings = { ...settings, endpoint: subscription.endpoint };
+      renderRegisteredNotifications(data);
+    } catch (error) {
+      if (renderId !== notificationRenderId || notificationSettingsBusy) return;
+      deviceAlertSettings = null;
+      elements.projectAlertSettings.hidden = true;
+      elements.notificationTitle.textContent = "Could not load alert settings";
+      elements.notificationDetail.textContent = error.message;
+      elements.notificationButton.textContent = "Enable alerts";
+      elements.notificationButton.disabled = false;
+    }
     return;
   }
 
+  deviceAlertSettings = null;
+  elements.projectAlertSettings.hidden = true;
   elements.notificationButton.disabled = false;
   elements.notificationButton.textContent = "Enable alerts";
+  elements.notificationTitle.textContent = "Turn on notifications";
+  elements.notificationDetail.textContent = "New tasks, task updates, and login alerts.";
   if (isIos() && !isStandalone()) {
     elements.notificationTitle.textContent = "Add this dashboard to your Home Screen";
     elements.notificationDetail.textContent = "Open Safari's Share menu, choose Add to Home Screen, then enable alerts from the app.";
@@ -537,6 +574,24 @@ async function renderNotifications(data) {
     elements.notificationTitle.textContent = "Alerts are still being set up";
     elements.notificationDetail.textContent = "Refresh in a moment.";
     elements.notificationButton.disabled = true;
+  }
+}
+
+async function saveNotificationSettings(changes) {
+  if (notificationSettingsBusy || !deviceAlertSettings?.endpoint) return;
+  notificationSettingsBusy = true;
+  ++notificationRenderId;
+  elements.alertSettingsError.hidden = true;
+  renderRegisteredNotifications(dashboardStatus || {});
+  try {
+    const saved = await api("notification_preferences", { endpoint: deviceAlertSettings.endpoint, ...changes });
+    deviceAlertSettings = { ...saved, endpoint: deviceAlertSettings.endpoint };
+  } catch (error) {
+    elements.alertSettingsError.textContent = error.message;
+    elements.alertSettingsError.hidden = false;
+  } finally {
+    notificationSettingsBusy = false;
+    renderRegisteredNotifications(dashboardStatus || {});
   }
 }
 
@@ -644,11 +699,25 @@ elements.projectOverviewList.addEventListener("click", (event) => {
 });
 
 elements.notificationButton.addEventListener("click", () => {
+  if (deviceAlertSettings?.endpoint) {
+    saveNotificationSettings({ alertsEnabled: !deviceAlertSettings.alertsEnabled });
+    return;
+  }
+  elements.alertSettingsError.hidden = true;
   enableNotifications().catch((error) => {
     elements.notificationTitle.textContent = "Could not enable alerts";
     elements.notificationDetail.textContent = error.message;
     elements.notificationButton.disabled = false;
   });
+});
+
+elements.projectAlertSettings.addEventListener("change", (event) => {
+  const input = event.target.closest("[data-project-alert]");
+  if (!input || notificationSettingsBusy || !deviceAlertSettings) return;
+  const muted = new Set(deviceAlertSettings.mutedProjectKeys);
+  if (input.checked) muted.delete(input.dataset.projectAlert);
+  else muted.add(input.dataset.projectAlert);
+  saveNotificationSettings({ mutedProjectKeys: [...muted] });
 });
 
 elements.disconnectButton.addEventListener("click", async () => {

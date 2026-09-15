@@ -11,7 +11,7 @@
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icon-180.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260901-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260915-1" />
   </head>
   <body>
     <main class="app-shell">
@@ -83,12 +83,14 @@
           <div class="notification-copy">
             <span class="info-mark" aria-hidden="true">i</span>
             <div>
-              <p class="eyebrow">Phone alerts</p>
+              <p class="eyebrow">Alerts on this device</p>
               <h2 id="notification-title">Turn on notifications</h2>
               <p id="notification-detail">Get alerts for new tasks, stage changes, payout stages, and an expired HAI login.</p>
             </div>
           </div>
           <button class="primary" id="notification-button" type="button">Enable alerts</button>
+          <div class="project-alert-settings" id="project-alert-settings" role="group" aria-label="Project alerts" hidden></div>
+          <p class="form-error alert-settings-error" id="alert-settings-error" role="alert" hidden></p>
         </section>
 
         <section class="history-alert" id="history-alert" role="alert" hidden>
@@ -201,6 +203,6 @@
         </footer>
       </div>
     </main>
-    <script src="./app.js?v=20260914-1" defer></script>
+    <script src="./app.js?v=20260915-1" defer></script>
   </body>
 </html>
