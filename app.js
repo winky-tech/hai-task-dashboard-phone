@@ -736,6 +736,29 @@ if ("serviceWorker" in navigator && !PREVIEW_MODE) {
   navigator.serviceWorker.register("./service-worker.js?v=20260901-3", { scope: "./" });
 }
 
+let checkingAppUpdate = false;
+async function checkAppUpdate() {
+  if (PREVIEW_MODE || document.hidden || checkingAppUpdate) return;
+  checkingAppUpdate = true;
+  try {
+    const response = await fetch("./index.html", { cache: "no-store" });
+    if (!response.ok) return;
+    const latest = new DOMParser().parseFromString(await response.text(), "text/html");
+    const currentScript = document.querySelector('script[src*="app.js"]')?.getAttribute("src");
+    const latestScript = latest.querySelector('script[src*="app.js"]')?.getAttribute("src");
+    if (currentScript && latestScript && currentScript !== latestScript) {
+      const url = new URL(location.href);
+      url.searchParams.set("ui", new URL(latestScript, location.href).searchParams.get("v") || Date.now());
+      location.replace(url.href);
+    }
+  } catch {
+    // Keep the current dashboard usable while offline.
+  } finally {
+    checkingAppUpdate = false;
+  }
+}
+document.addEventListener("visibilitychange", checkAppUpdate);
+checkAppUpdate();
 loadStatus();
 setInterval(updateCountdown, 1_000);
 setInterval(() => {
