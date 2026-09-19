@@ -518,9 +518,18 @@ function renderRegisteredNotifications(data) {
     project.check_status !== "hidden" && ["ivy", "roadhouse", "jet"].includes(project.project_key));
   const muted = new Set(deviceAlertSettings.mutedProjectKeys);
   elements.projectAlertSettings.hidden = projects.length === 0;
-  elements.projectAlertSettings.innerHTML = projects.map((project) =>
-    `<label class="project-alert-option"><span>${escapeHtml(project.project_name)}</span><input type="checkbox" role="switch" data-project-alert="${escapeHtml(project.project_key)}" aria-label="${escapeHtml(project.project_name)} alerts" ${muted.has(project.project_key) ? "" : "checked"} ${!enabled || notificationSettingsBusy || PREVIEW_MODE ? "disabled" : ""}></label>`
-  ).join("");
+  elements.projectAlertSettings.innerHTML = projects.map((project) => {
+    const key = escapeHtml(project.project_key);
+    const name = escapeHtml(project.project_name);
+    const disabled = !enabled || notificationSettingsBusy || PREVIEW_MODE;
+    const categories = [
+      ["mutedNewTaskProjectKeys", "New tasks"],
+      ["mutedStageChangeProjectKeys", "Stage changes"],
+    ].map(([field, label]) =>
+      `<label class="project-alert-option"><span>${label}</span><input type="checkbox" role="switch" data-project-alert="${key}" data-alert-field="${field}" aria-label="${name} ${label.toLowerCase()}" ${(deviceAlertSettings[field] || []).includes(project.project_key) ? "" : "checked"} ${disabled || muted.has(project.project_key) ? "disabled" : ""}></label>`
+    ).join("");
+    return `<section class="project-alert-group" aria-label="${name} notification settings"><label class="project-alert-option"><strong>${name}</strong><input type="checkbox" role="switch" data-project-alert="${key}" aria-label="${name} alerts" ${muted.has(project.project_key) ? "" : "checked"} ${disabled ? "disabled" : ""}></label>${categories}</section>`;
+  }).join("");
 }
 
 async function renderNotifications(data) {
@@ -714,10 +723,11 @@ elements.notificationButton.addEventListener("click", () => {
 elements.projectAlertSettings.addEventListener("change", (event) => {
   const input = event.target.closest("[data-project-alert]");
   if (!input || notificationSettingsBusy || !deviceAlertSettings) return;
-  const muted = new Set(deviceAlertSettings.mutedProjectKeys);
+  const field = input.dataset.alertField || "mutedProjectKeys";
+  const muted = new Set(deviceAlertSettings[field] || []);
   if (input.checked) muted.delete(input.dataset.projectAlert);
   else muted.add(input.dataset.projectAlert);
-  saveNotificationSettings({ mutedProjectKeys: [...muted] });
+  saveNotificationSettings({ [field]: [...muted] });
 });
 
 elements.disconnectButton.addEventListener("click", async () => {
