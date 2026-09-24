@@ -474,7 +474,9 @@ function renderProjectView(project, tasks = []) {
     summaryCard("Total tasks", String(project.total || 0), "neutral", `${missingCount} missing from HAI`),
     summaryCard("Needs attention", String(project.needsAttention || 0), "attention", "Fix these first"),
     summaryCard("In review", String(project.inReview || 0), "review", "Still in review"),
-    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", `${payoutStageCount} reached RTD / Delivered · ${project.availableCount || 0} available now`),
+    summaryCard("RTD / Delivered", String(payoutStageCount), "neutral", "Reached either stage"),
+    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", "Based on saved task history"),
+    summaryCard("Available tasks", String(project.availableCount || 0), "neutral", "Ready to claim"),
   ].join("");
   elements.projectTaskCount.textContent = String(projectTasks.length);
   elements.projectTaskList.innerHTML = projectTasks.length
