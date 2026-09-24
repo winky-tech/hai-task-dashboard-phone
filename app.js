@@ -413,6 +413,12 @@ function emptyRow(message) {
   return `<li class="empty-row">${escapeHtml(message)}</li>`;
 }
 
+function reachedPayoutStage(task) {
+  return ["rtd", "ready to deliver", "delivered"].includes(
+    String(task.stage || "").trim().toLowerCase()
+  );
+}
+
 function renderAttention(tasks = []) {
   const attention = tasks.filter((task) => !task.isMissing && taskNeedsAttention(task));
   elements.attentionCount.textContent = String(attention.length);
@@ -421,11 +427,11 @@ function renderAttention(tasks = []) {
     : emptyRow("Nothing needs your attention right now.");
 }
 
-function renderProjectOverview(projects = []) {
+function renderProjectOverview(projects = [], tasks = []) {
   elements.projectOverviewList.innerHTML = projects
     .map(
       (project) => `<button class="project-overview-row" type="button" data-view="${escapeHtml(project.key)}">
-        <span><strong>${escapeHtml(project.name)}</strong><small>${project.total} tracked · ${project.inReview} in review</small></span>
+        <span><strong>${escapeHtml(project.name)}</strong><small>${project.total} tracked · ${project.inReview} in review · ${tasks.filter((task) => task.projectKey === project.key && reachedPayoutStage(task)).length} RTD / Delivered</small></span>
         <span class="project-overview-pay"><strong>${escapeHtml(money(project.paidOutEstimate))}</strong><small>paid out est.</small></span>
         <span class="row-arrow" aria-hidden="true">&#8250;</span>
       </button>`
@@ -460,6 +466,7 @@ function renderProjectView(project, tasks = []) {
   if (!project) return;
   const projectTasks = tasks.filter((task) => task.projectKey === project.key);
   const missingCount = projectTasks.filter((task) => task.isMissing).length;
+  const payoutStageCount = projectTasks.filter(reachedPayoutStage).length;
   elements.projectViewTitle.textContent = project.name;
   elements.projectViewDescription.textContent = `${project.total} tracked task${project.total === 1 ? "" : "s"}${missingCount ? `, including ${missingCount} saved task${missingCount === 1 ? "" : "s"} missing from HAI` : ""}.`;
   elements.projectHandshakeLink.href = safeUrl(project.projectUrl);
@@ -467,7 +474,7 @@ function renderProjectView(project, tasks = []) {
     summaryCard("Total tasks", String(project.total || 0), "neutral", `${missingCount} missing from HAI`),
     summaryCard("Needs attention", String(project.needsAttention || 0), "attention", "Fix these first"),
     summaryCard("In review", String(project.inReview || 0), "review", "Still in review"),
-    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", `${project.availableCount || 0} available now`),
+    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", `${payoutStageCount} RTD / Delivered · ${project.availableCount || 0} available now`),
   ].join("");
   elements.projectTaskCount.textContent = String(projectTasks.length);
   elements.projectTaskList.innerHTML = projectTasks.length
@@ -638,7 +645,7 @@ async function renderDashboard(data) {
   renderAvailability(data.projects || [], data.pollIntervalMs);
   renderOverviewSummary(data.summary || {});
   renderAttention(data.tasks || []);
-  renderProjectOverview(data.projectSummaries || []);
+  renderProjectOverview(data.projectSummaries || [], data.tasks || []);
   renderRecent(data.tasks || []);
   renderHistory(data.summary || {});
   renderView();
