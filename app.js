@@ -414,7 +414,7 @@ function emptyRow(message) {
 }
 
 function reachedPayoutStage(task) {
-  return ["rtd", "ready to deliver", "delivered"].includes(
+  return task.paymentEligible === true || ["rtd", "ready to deliver", "delivered"].includes(
     String(task.stage || "").trim().toLowerCase()
   );
 }
@@ -431,7 +431,7 @@ function renderProjectOverview(projects = [], tasks = []) {
   elements.projectOverviewList.innerHTML = projects
     .map(
       (project) => `<button class="project-overview-row" type="button" data-view="${escapeHtml(project.key)}">
-        <span><strong>${escapeHtml(project.name)}</strong><small>${project.total} tracked · ${project.inReview} in review · ${tasks.filter((task) => task.projectKey === project.key && reachedPayoutStage(task)).length} RTD / Delivered</small></span>
+        <span><strong>${escapeHtml(project.name)}</strong><small>${project.total} tracked · ${project.inReview} in review · ${tasks.filter((task) => task.projectKey === project.key && reachedPayoutStage(task)).length} reached RTD / Delivered</small></span>
         <span class="project-overview-pay"><strong>${escapeHtml(money(project.paidOutEstimate))}</strong><small>paid out est.</small></span>
         <span class="row-arrow" aria-hidden="true">&#8250;</span>
       </button>`
@@ -474,7 +474,7 @@ function renderProjectView(project, tasks = []) {
     summaryCard("Total tasks", String(project.total || 0), "neutral", `${missingCount} missing from HAI`),
     summaryCard("Needs attention", String(project.needsAttention || 0), "attention", "Fix these first"),
     summaryCard("In review", String(project.inReview || 0), "review", "Still in review"),
-    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", `${payoutStageCount} RTD / Delivered · ${project.availableCount || 0} available now`),
+    summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", `${payoutStageCount} reached RTD / Delivered · ${project.availableCount || 0} available now`),
   ].join("");
   elements.projectTaskCount.textContent = String(projectTasks.length);
   elements.projectTaskList.innerHTML = projectTasks.length
