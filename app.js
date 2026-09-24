@@ -88,7 +88,7 @@ const previewTasks = [
     projectName: "Ivy",
     title: "Code review task",
     taskUrl: "https://ai.joinhandshake.com/fellow/projects",
-    stage: "Delivered",
+    stage: "Delivered - Accepted",
     buildStatus: "Passing",
     paymentAmount: 225,
     paymentEligible: true,
@@ -268,10 +268,16 @@ function taskNeedsAttention(task = {}) {
   );
 }
 
+function isPayoutStageLabel(stage) {
+  const value = String(stage || "").trim().toLowerCase();
+  return value === "rtd" || value === "ready to deliver" ||
+    /^delivered(?:\s*-\s*accepted)?$/.test(value);
+}
+
 function stageTone(task = {}) {
   if (task.isMissing || taskNeedsAttention(task)) return "attention";
   if (String(task.stage || "").toLowerCase().includes("review")) return "review";
-  if (["ready to deliver", "delivered"].includes(String(task.stage || "").toLowerCase())) {
+  if (isPayoutStageLabel(task.stage)) {
     return "paid";
   }
   return "neutral";
@@ -414,9 +420,7 @@ function emptyRow(message) {
 }
 
 function reachedPayoutStage(task) {
-  return task.paymentEligible === true || ["rtd", "ready to deliver", "delivered"].includes(
-    String(task.stage || "").trim().toLowerCase()
-  );
+  return task.paymentEligible === true || isPayoutStageLabel(task.stage);
 }
 
 function renderAttention(tasks = []) {
