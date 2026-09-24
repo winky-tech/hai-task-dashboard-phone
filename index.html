@@ -11,7 +11,7 @@
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icon-180.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260915-1" />
+    <link rel="stylesheet" href="./styles.css?v=20260924-1" />
   </head>
   <body>
     <main class="app-shell">
@@ -156,13 +156,24 @@
             <a class="open-project-link" id="project-handshake-link" href="https://ai.joinhandshake.com/fellow/projects" target="_blank" rel="noreferrer">Open in Handshake <span aria-hidden="true">&#8599;</span></a>
           </header>
           <section class="summary-grid project-summary-grid" id="project-summary-grid" aria-label="Project summary"></section>
+          <section class="stage-breakdown" aria-labelledby="stage-breakdown-heading">
+            <div class="stage-breakdown-heading">
+              <h3 id="stage-breakdown-heading">Other current stages</h3>
+              <span id="stage-breakdown-count"></span>
+            </div>
+            <p>Saved tasks missing from HAI show their last known stage.</p>
+            <div class="stage-breakdown-list" id="stage-breakdown-list"></div>
+          </section>
           <article class="panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">All tracked work</p>
                 <h2 id="project-task-heading">Tasks</h2>
               </div>
-              <span class="count-badge" id="project-task-count">0</span>
+              <div class="project-task-actions">
+                <button class="text-button" id="project-task-show-all" type="button" hidden>Show all</button>
+                <span class="count-badge" id="project-task-count">0</span>
+              </div>
             </div>
             <ul class="task-list project-task-list" id="project-task-list"></ul>
           </article>
@@ -203,6 +214,6 @@
         </footer>
       </div>
     </main>
-    <script src="./app.js?v=20260924-4" defer></script>
+    <script src="./app.js?v=20260924-5" defer></script>
   </body>
 </html>

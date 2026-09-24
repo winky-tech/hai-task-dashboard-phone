@@ -804,6 +804,77 @@ button:disabled {
   gap: 20px;
 }
 
+.stage-breakdown {
+  margin-top: 24px;
+}
+
+.stage-breakdown-heading,
+.project-task-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stage-breakdown-heading h3 {
+  font-size: 16px;
+}
+
+.stage-breakdown-heading > span,
+.stage-breakdown > p {
+  color: #68737b;
+  font-size: 12px;
+}
+
+.stage-breakdown > p {
+  margin: 5px 0 12px;
+}
+
+.stage-breakdown-list {
+  border-top: 1px solid #e1e5e7;
+}
+
+.stage-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 58px;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 1px solid #e1e5e7;
+  background: #fff;
+  color: #15191c;
+  text-align: left;
+}
+
+.stage-breakdown-row[aria-pressed="true"] {
+  background: #eef4f3;
+  box-shadow: inset 3px 0 #12352f;
+}
+
+.stage-breakdown-row > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stage-breakdown-row small,
+.stage-breakdown-empty {
+  color: #68737b;
+  font-size: 11px;
+}
+
+.stage-breakdown-row > strong {
+  font-size: 16px;
+}
+
+.stage-breakdown-empty {
+  padding: 16px 12px;
+}
+
 .open-project-link {
   min-height: 38px;
   padding: 9px 12px;

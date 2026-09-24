@@ -42,6 +42,10 @@ const elements = {
   projectViewDescription: document.querySelector("#project-view-description"),
   projectHandshakeLink: document.querySelector("#project-handshake-link"),
   projectSummaryGrid: document.querySelector("#project-summary-grid"),
+  stageBreakdownCount: document.querySelector("#stage-breakdown-count"),
+  stageBreakdownList: document.querySelector("#stage-breakdown-list"),
+  projectTaskHeading: document.querySelector("#project-task-heading"),
+  projectTaskShowAll: document.querySelector("#project-task-show-all"),
   projectTaskCount: document.querySelector("#project-task-count"),
   projectTaskList: document.querySelector("#project-task-list"),
 };
@@ -51,6 +55,7 @@ let deviceAlertSettings = null;
 let notificationSettingsBusy = false;
 let notificationRenderId = 0;
 let activeView = "overview";
+let activeStageFilter = null;
 let checkInProgress = false;
 
 const previewTasks = [
@@ -471,6 +476,20 @@ function renderProjectView(project, tasks = []) {
   const projectTasks = tasks.filter((task) => task.projectKey === project.key);
   const missingCount = projectTasks.filter((task) => task.isMissing).length;
   const payoutStageCount = projectTasks.filter(reachedPayoutStage).length;
+  const otherStages = new Map();
+  for (const task of projectTasks) {
+    if (isPayoutStageLabel(task.stage)) continue;
+    const label = String(task.stage || "").trim() || "Unknown";
+    const key = label.toLowerCase();
+    const group = otherStages.get(key) || { key, label, total: 0, current: 0, saved: 0 };
+    group.total += 1;
+    if (task.isMissing) group.saved += 1;
+    else group.current += 1;
+    otherStages.set(key, group);
+  }
+  const groups = [...otherStages.values()].sort((a, b) =>
+    b.current - a.current || b.total - a.total || a.label.localeCompare(b.label));
+  if (activeStageFilter && !otherStages.has(activeStageFilter)) activeStageFilter = null;
   elements.projectViewTitle.textContent = project.name;
   elements.projectViewDescription.textContent = `${project.total} tracked task${project.total === 1 ? "" : "s"}${missingCount ? `, including ${missingCount} saved task${missingCount === 1 ? "" : "s"} missing from HAI` : ""}.`;
   elements.projectHandshakeLink.href = safeUrl(project.projectUrl);
@@ -482,9 +501,26 @@ function renderProjectView(project, tasks = []) {
     summaryCard("Paid out estimate", money(project.paidOutEstimate), "paid", "Based on saved task history"),
     summaryCard("Available tasks", String(project.availableCount || 0), "neutral", "Ready to claim"),
   ].join("");
-  elements.projectTaskCount.textContent = String(projectTasks.length);
-  elements.projectTaskList.innerHTML = projectTasks.length
-    ? projectTasks.map((task) => taskRow(task)).join("")
+  const otherCount = groups.reduce((sum, group) => sum + group.total, 0);
+  elements.stageBreakdownCount.textContent = `${otherCount} task${otherCount === 1 ? "" : "s"}`;
+  elements.stageBreakdownList.innerHTML = groups.length
+    ? groups.map((group) => `<button class="stage-breakdown-row" type="button" data-stage-key="${escapeHtml(group.key)}" aria-pressed="${activeStageFilter === group.key}">
+        <span><strong>${escapeHtml(group.label)}</strong><small>${[
+          group.current ? `${group.current} current` : "",
+          group.saved ? `${group.saved} saved, missing from HAI` : ""
+        ].filter(Boolean).join(" · ")}</small></span>
+        <strong>${group.total}</strong>
+      </button>`).join("")
+    : '<p class="stage-breakdown-empty">No tasks in other stages.</p>';
+  const displayedTasks = activeStageFilter
+    ? projectTasks.filter((task) => String(task.stage || "").trim().toLowerCase() === activeStageFilter)
+    : projectTasks;
+  elements.projectTaskHeading.textContent = activeStageFilter
+    ? `${otherStages.get(activeStageFilter).label} tasks` : "Tasks";
+  elements.projectTaskShowAll.hidden = !activeStageFilter;
+  elements.projectTaskCount.textContent = String(displayedTasks.length);
+  elements.projectTaskList.innerHTML = displayedTasks.length
+    ? displayedTasks.map((task) => taskRow(task)).join("")
     : emptyRow("No tasks have been saved for this project yet.");
 }
 
@@ -709,6 +745,7 @@ elements.pairingForm.addEventListener("submit", async (event) => {
 elements.projectTabs.addEventListener("click", (event) => {
   const button = event.target.closest("[data-view]");
   if (!button) return;
+  if (activeView !== button.dataset.view) activeStageFilter = null;
   activeView = button.dataset.view;
   renderView({ scroll: true });
 });
@@ -716,8 +753,22 @@ elements.projectTabs.addEventListener("click", (event) => {
 elements.projectOverviewList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-view]");
   if (!button) return;
+  activeStageFilter = null;
   activeView = button.dataset.view;
   renderView({ scroll: true });
+});
+
+elements.stageBreakdownList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-stage-key]");
+  if (!button) return;
+  activeStageFilter = button.dataset.stageKey;
+  renderView();
+  elements.projectTaskHeading.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+elements.projectTaskShowAll.addEventListener("click", () => {
+  activeStageFilter = null;
+  renderView();
 });
 
 elements.notificationButton.addEventListener("click", () => {
