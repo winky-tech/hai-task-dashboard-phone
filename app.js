@@ -181,11 +181,13 @@ const previewStatus = {
     { project_key: "ivy", project_name: "Ivy", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
     { project_key: "roadhouse", project_name: "Roadhouse", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 2, check_status: "ok" },
     { project_key: "jet", project_name: "Jet", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
+    { project_key: "lever", project_name: "Lever", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
   ],
   projectSummaries: [
     { key: "ivy", name: "Ivy", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 4, needsAttention: 1, inReview: 1, earnedEstimate: 450, paidOutEstimate: 450, availableCount: 0, availabilityStatus: "ok" },
     { key: "roadhouse", name: "Roadhouse", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 2, needsAttention: 0, inReview: 1, earnedEstimate: 225, paidOutEstimate: 225, availableCount: 2, availabilityStatus: "ok" },
     { key: "jet", name: "Jet", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 1, needsAttention: 0, inReview: 0, earnedEstimate: 238.5, paidOutEstimate: 238.5, availableCount: 0, availabilityStatus: "ok" },
+    { key: "lever", name: "Lever", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 0, needsAttention: 0, inReview: 0, earnedEstimate: 0, paidOutEstimate: 0, availableCount: 0, availabilityStatus: "ok" },
   ],
   tasks: previewTasks,
 };
@@ -380,7 +382,7 @@ function renderAvailability(projects = [], pollIntervalMs = DEFAULT_CHECK_INTERV
   elements.availabilitySummary.textContent =
     failures > 0
       ? `${failures} project check${failures === 1 ? "" : "s"} will retry automatically.`
-      : `Ivy, Roadhouse, and your active projects are checked ${intervalLabel}.`;
+      : `Your active projects are checked ${intervalLabel}.`;
   elements.availabilityNote.textContent = `${total} available`;
   elements.availabilityProjects.innerHTML = visible
     .map((project) => {
@@ -491,7 +493,10 @@ function renderProjectView(project, tasks = []) {
     b.current - a.current || b.total - a.total || a.label.localeCompare(b.label));
   if (activeStageFilter && !otherStages.has(activeStageFilter)) activeStageFilter = null;
   elements.projectViewTitle.textContent = project.name;
-  elements.projectViewDescription.textContent = `${project.total} tracked task${project.total === 1 ? "" : "s"}${missingCount ? `, including ${missingCount} saved task${missingCount === 1 ? "" : "s"} missing from HAI` : ""}.`;
+  const rate = Number(project.paymentPerTask) > 0
+    ? `${money(project.paymentPerTask)} per RTD / Delivered task${Number(project.hourlyRate) > 0 ? ` plus ${money(project.hourlyRate)}/hr` : ""}. `
+    : "";
+  elements.projectViewDescription.textContent = `${rate}${project.total} tracked task${project.total === 1 ? "" : "s"}${missingCount ? `, including ${missingCount} saved task${missingCount === 1 ? "" : "s"} missing from HAI` : ""}.`;
   elements.projectHandshakeLink.href = safeUrl(project.projectUrl);
   elements.projectSummaryGrid.innerHTML = [
     summaryCard("Total tasks", String(project.total || 0), "neutral", `${missingCount} missing from HAI`),
@@ -564,7 +569,7 @@ function renderRegisteredNotifications(data) {
   elements.notificationButton.textContent = enabled ? "Disable alerts" : "Enable alerts";
   elements.notificationButton.disabled = notificationSettingsBusy || PREVIEW_MODE;
   const projects = (data.projects || []).filter((project) =>
-    project.check_status !== "hidden" && ["ivy", "roadhouse", "jet"].includes(project.project_key));
+    project.check_status !== "hidden" && ["ivy", "roadhouse", "jet", "lever"].includes(project.project_key));
   const muted = new Set(deviceAlertSettings.mutedProjectKeys);
   elements.projectAlertSettings.hidden = projects.length === 0;
   elements.projectAlertSettings.innerHTML = projects.map((project) => {

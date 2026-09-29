@@ -465,7 +465,7 @@ button:disabled {
 
 .project-alert-settings {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   flex-basis: 100%;
   width: 100%;
   gap: 12px;
