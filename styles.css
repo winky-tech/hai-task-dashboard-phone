@@ -1090,8 +1090,14 @@ button:disabled {
     flex-direction: column;
   }
 
+  .project-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .project-tab {
-    min-width: max-content;
+    min-width: 0;
+    padding: 0 8px;
   }
 
   .faq-jump {
