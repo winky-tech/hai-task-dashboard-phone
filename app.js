@@ -183,6 +183,7 @@ const previewStatus = {
     { project_key: "jet", project_name: "Jet", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
     { project_key: "lever", project_name: "Lever", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
     { project_key: "shotgun", project_name: "Shotgun", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
+    { project_key: "geardown", project_name: "Gear Down", project_url: "https://ai.joinhandshake.com/fellow/projects", available_count: 0, check_status: "ok" },
   ],
   projectSummaries: [
     { key: "ivy", name: "Ivy", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 4, needsAttention: 1, inReview: 1, earnedEstimate: 450, paidOutEstimate: 450, availableCount: 0, availabilityStatus: "ok" },
@@ -190,6 +191,7 @@ const previewStatus = {
     { key: "jet", name: "Jet", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 1, needsAttention: 0, inReview: 0, earnedEstimate: 238.5, paidOutEstimate: 238.5, availableCount: 0, availabilityStatus: "ok" },
     { key: "lever", name: "Lever", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 0, needsAttention: 0, inReview: 0, earnedEstimate: 0, paidOutEstimate: 0, availableCount: 0, availabilityStatus: "ok" },
     { key: "shotgun", name: "Shotgun", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 0, needsAttention: 0, inReview: 0, earnedEstimate: 0, paidOutEstimate: 0, availableCount: 0, availabilityStatus: "ok" },
+    { key: "geardown", name: "Gear Down", projectUrl: "https://ai.joinhandshake.com/fellow/projects", total: 0, needsAttention: 0, inReview: 0, earnedEstimate: 0, paidOutEstimate: 0, availableCount: 0, availabilityStatus: "ok" },
   ],
   tasks: previewTasks,
 };
@@ -571,7 +573,7 @@ function renderRegisteredNotifications(data) {
   elements.notificationButton.textContent = enabled ? "Disable alerts" : "Enable alerts";
   elements.notificationButton.disabled = notificationSettingsBusy || PREVIEW_MODE;
   const projects = (data.projects || []).filter((project) =>
-    project.check_status !== "hidden" && ["ivy", "roadhouse", "jet", "lever", "shotgun"].includes(project.project_key));
+    project.check_status !== "hidden" && ["ivy", "roadhouse", "jet", "lever", "shotgun", "geardown"].includes(project.project_key));
   const muted = new Set(deviceAlertSettings.mutedProjectKeys);
   elements.projectAlertSettings.hidden = projects.length === 0;
   elements.projectAlertSettings.innerHTML = projects.map((project) => {
